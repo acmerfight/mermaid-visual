@@ -1,0 +1,44 @@
+/**
+ * MermaidEditor Styles
+ */
+
+.mermaid-editor {
+  display: flex;
+  flex-direction: column;
+  background: #1e1e1e;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.editor-header {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #252526;
+  border-bottom: 1px solid #3c3c3c;
+}
+
+.editor-header h3 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #cccccc;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.editor-container {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Monaco editor overrides */
+.editor-container .monaco-editor {
+  padding-top: 0;
+}
+
+.editor-container .monaco-editor .margin {
+  background: #1e1e1e;
+}
+

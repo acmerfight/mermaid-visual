@@ -1,0 +1,2 @@
+export { MermaidEditor } from './MermaidEditor';
+
