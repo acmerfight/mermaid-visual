@@ -15,6 +15,7 @@ import {
   renderDiagramAction,
 } from '../../atoms';
 import { DEFAULT_MERMAID_CODE } from '../../constants/editor.constants';
+import { waitForRenderComplete, measureTime } from '../../test/utils';
 
 describe('Feature: Diagram Rendering', () => {
   let store: ReturnType<typeof createStore>;
@@ -25,7 +26,6 @@ describe('Feature: Diagram Rendering', () => {
 
   describe('Scenario: Application loads with default diagram', () => {
     it('Given the application has just started', () => {
-      // The store should have default code loaded
       const code = store.get(editorCodeAtom);
       expect(code).toBe(DEFAULT_MERMAID_CODE);
     });
@@ -35,30 +35,26 @@ describe('Feature: Diagram Rendering', () => {
       expect(status).toBe('idle');
     });
 
-    it('When the initial render is triggered', async () => {
-      // Trigger the render action
+    it('When the initial render is triggered, Then it should complete', async () => {
       await store.set(renderDiagramAction);
       
-      // Wait for rendering to complete
-      await new Promise(resolve => setTimeout(resolve, 2000));
-    });
-
-    it('Then the diagram should complete rendering (success or error in test env)', async () => {
-      await store.set(renderDiagramAction);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const status = await waitForRenderComplete(
+        () => store.get(renderStatusAtom),
+        { timeout: 5000, interval: 50 }
+      );
       
-      const status = store.get(renderStatusAtom);
-      // In jsdom, getBBox is not available so we may get error
-      // The important thing is that we're not stuck in 'rendering'
       expect(['success', 'error']).toContain(status);
       expect(status).not.toBe('rendering');
     });
 
     it('And the SVG output should exist when successful', async () => {
       await store.set(renderDiagramAction);
-      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const status = store.get(renderStatusAtom);
+      const status = await waitForRenderComplete(
+        () => store.get(renderStatusAtom),
+        { timeout: 5000, interval: 50 }
+      );
+      
       if (status === 'success') {
         const svg = store.get(renderedSvgAtom);
         expect(svg).toBeTruthy();
@@ -68,9 +64,12 @@ describe('Feature: Diagram Rendering', () => {
 
     it('And the SVG should contain valid markup when successful', async () => {
       await store.set(renderDiagramAction);
-      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const status = store.get(renderStatusAtom);
+      const status = await waitForRenderComplete(
+        () => store.get(renderStatusAtom),
+        { timeout: 5000, interval: 50 }
+      );
+      
       if (status === 'success') {
         const svg = store.get(renderedSvgAtom);
         expect(svg).toContain('<svg');
@@ -85,21 +84,26 @@ describe('Feature: Diagram Rendering', () => {
       expect(code).toContain('graph');
     });
 
-    it('When rendering is triggered', async () => {
-      const startTime = Date.now();
-      await store.set(renderDiagramAction);
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      const endTime = Date.now();
+    it('When rendering is triggered, Then it should complete within 5 seconds', async () => {
+      const { duration } = await measureTime(async () => {
+        await store.set(renderDiagramAction);
+        return waitForRenderComplete(
+          () => store.get(renderStatusAtom),
+          { timeout: 5000, interval: 50 }
+        );
+      });
       
-      // Rendering should complete within 5 seconds
-      expect(endTime - startTime).toBeLessThan(6000);
+      expect(duration).toBeLessThan(5000);
     });
 
     it('Then the status should not remain stuck on rendering', async () => {
       await store.set(renderDiagramAction);
-      await new Promise(resolve => setTimeout(resolve, 3000));
       
-      const status = store.get(renderStatusAtom);
+      const status = await waitForRenderComplete(
+        () => store.get(renderStatusAtom),
+        { timeout: 5000, interval: 50 }
+      );
+      
       expect(status).not.toBe('rendering');
       expect(['success', 'error']).toContain(status);
     });
@@ -108,11 +112,14 @@ describe('Feature: Diagram Rendering', () => {
   describe('Scenario: Rendering never gets stuck in loading state', () => {
     it('Given rendering has been initiated, it should complete', async () => {
       await store.set(renderDiagramAction);
-      await new Promise(resolve => setTimeout(resolve, 3000));
       
-      const status = store.get(renderStatusAtom);
+      const status = await waitForRenderComplete(
+        () => store.get(renderStatusAtom),
+        { timeout: 5000, interval: 50 }
+      );
+      
       expect(status).not.toBe('rendering');
       expect(['success', 'error']).toContain(status);
-    }, 10000);
+    });
   });
 });

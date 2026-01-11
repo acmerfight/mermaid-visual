@@ -15,6 +15,7 @@ import {
   setCodeAction,
 } from '../../atoms';
 import { DEFAULT_MERMAID_CODE } from '../../constants/editor.constants';
+import { waitForRenderComplete } from '../../test/utils';
 
 describe('Feature: Diagram Editing', () => {
   let store: ReturnType<typeof createStore>;
@@ -64,7 +65,6 @@ describe('Feature: Diagram Editing', () => {
       store.set(updateCodeAction, 'graph TD\n  A --> B');
       store.set(updateCodeAction, 'graph TD\n  A --> B --> C');
       
-      // Code should reflect the latest update
       const code = store.get(editorCodeAtom);
       expect(code).toBe('graph TD\n  A --> B --> C');
     });
@@ -72,10 +72,11 @@ describe('Feature: Diagram Editing', () => {
     it('Then the diagram should update after debounce delay', async () => {
       store.set(updateCodeAction, 'graph LR\n  Start --> End');
       
-      // Wait for debounce (300ms) + render time
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const status = await waitForRenderComplete(
+        () => store.get(renderStatusAtom),
+        { timeout: 2000, interval: 50 }
+      );
       
-      const status = store.get(renderStatusAtom);
       expect(['success', 'error']).toContain(status);
     });
   });
@@ -137,4 +138,3 @@ describe('Feature: Diagram Editing', () => {
     });
   });
 });
-
