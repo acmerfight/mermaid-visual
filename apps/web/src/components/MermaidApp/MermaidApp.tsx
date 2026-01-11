@@ -6,6 +6,7 @@
 import { useSetAtom, useAtomValue } from 'jotai';
 import { MermaidEditor } from '../MermaidEditor/MermaidEditor';
 import { MermaidPreview } from '../MermaidPreview/MermaidPreview';
+import { ThemeSelector } from '../ThemeSelector/ThemeSelector';
 import { renderDiagramAction, editorCodeAtom, renderStatusAtom } from '../../atoms';
 import { UI_TEXT } from '../../constants/editor.constants';
 import { isInitialized, markInitialized } from './initialization';
@@ -40,9 +41,16 @@ export function MermaidApp(): JSX.Element {
     <div className="mermaid-app">
       <DiagramInitializer />
       <header className="app-header">
-        <h1>{UI_TEXT.APP_TITLE}</h1>
-        <p>{UI_TEXT.APP_SUBTITLE}</p>
+        <div className="header-content">
+          <div className="header-title">
+            <h1>{UI_TEXT.APP_TITLE}</h1>
+            <p>{UI_TEXT.APP_SUBTITLE}</p>
+          </div>
+        </div>
       </header>
+      <div className="app-toolbar">
+        <ThemeSelector />
+      </div>
       <main className="app-main">
         <MermaidEditor />
         <MermaidPreview />

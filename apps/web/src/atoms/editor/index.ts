@@ -22,3 +22,9 @@ export {
   resetEditorAction,
 } from './actions.atoms';
 
+// Theme atoms
+export {
+  currentThemeAtom,
+  selectThemeAction,
+} from './theme.atoms';
+

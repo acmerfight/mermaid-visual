@@ -10,9 +10,11 @@ import {
   renderedSvgAtom,
   renderErrorAtom,
 } from './state.atoms';
+import { currentThemeAtom } from './theme.atoms';
 import { MermaidService } from '../../services/mermaid.service';
 import { Debouncer } from '../../services/debounce.service';
 import { DEBOUNCE_DELAY_MS } from '../../constants/editor.constants';
+import type { ThemeConfig } from '../../constants/themes.constants';
 
 // Track the current render to prevent race conditions
 let currentRenderId = 0;
@@ -20,6 +22,7 @@ let currentRenderId = 0;
 // Debouncer instance for code updates
 let renderDebouncer: Debouncer<{
   code: string;
+  theme: ThemeConfig;
   renderId: number;
   setStatus: (status: 'idle' | 'rendering' | 'success' | 'error') => void;
   setSvg: (svg: string) => void;
@@ -31,11 +34,11 @@ let renderDebouncer: Debouncer<{
  */
 function getDebouncer() {
   if (!renderDebouncer) {
-    renderDebouncer = new Debouncer(async ({ code, renderId, setStatus, setSvg, setError }) => {
+    renderDebouncer = new Debouncer(async ({ code, theme, renderId, setStatus, setSvg, setError }) => {
       // Check if this is still the current render request
       if (renderId !== currentRenderId) return;
 
-      const result = await MermaidService.render(code);
+      const result = await MermaidService.render(code, theme);
 
       // Check again after async operation
       if (renderId !== currentRenderId) return;
@@ -63,6 +66,9 @@ export const updateCodeAction = atom(
     // Update code immediately
     set(editorCodeAtom, newCode);
     
+    // Get current theme
+    const theme = get(currentThemeAtom);
+    
     // Set status to rendering
     set(renderStatusAtom, 'rendering');
     
@@ -72,6 +78,7 @@ export const updateCodeAction = atom(
     // Trigger debounced render
     getDebouncer().execute({
       code: newCode,
+      theme,
       renderId,
       setStatus: (status) => set(renderStatusAtom, status),
       setSvg: (svg) => set(renderedSvgAtom, svg),
@@ -88,6 +95,7 @@ export const renderDiagramAction = atom(
   null,
   async (get, set) => {
     const code = get(editorCodeAtom);
+    const theme = get(currentThemeAtom);
     const renderId = ++currentRenderId;
     
     // Cancel any pending debounced renders
@@ -96,8 +104,8 @@ export const renderDiagramAction = atom(
     // Set status to rendering
     set(renderStatusAtom, 'rendering');
     
-    // Render immediately
-    const result = await MermaidService.render(code);
+    // Render immediately with current theme
+    const result = await MermaidService.render(code, theme);
     
     // Check if this is still the current render
     if (renderId !== currentRenderId) return;

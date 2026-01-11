@@ -1,6 +1,6 @@
 /**
  * MermaidPreview Component
- * Displays the rendered Mermaid diagram
+ * Displays the rendered Mermaid diagram with theme-aware styling
  */
 
 import { useAtomValue } from 'jotai';
@@ -8,8 +8,10 @@ import {
   renderStatusAtom,
   renderErrorAtom,
   renderedSvgAtom,
+  currentThemeAtom,
 } from '../../atoms';
 import { UI_TEXT } from '../../constants/editor.constants';
+import { isDarkTheme } from '../../constants/themes.constants';
 import './MermaidPreview.css';
 
 /**
@@ -37,10 +39,13 @@ function PreviewContent(): JSX.Element {
   const status = useAtomValue(renderStatusAtom);
   const error = useAtomValue(renderErrorAtom);
   const svg = useAtomValue(renderedSvgAtom);
+  const theme = useAtomValue(currentThemeAtom);
+  const isDark = isDarkTheme(theme);
 
   if (status === 'idle') {
     return (
       <div className="preview-placeholder">
+        <div className="placeholder-icon">📊</div>
         <p>{UI_TEXT.PLACEHOLDER_IDLE}</p>
       </div>
     );
@@ -65,10 +70,13 @@ function PreviewContent(): JSX.Element {
     );
   }
 
-  // Success state
+  // Success state - apply theme background for dark themes
   return (
     <div
-      className="preview-svg"
+      className={`preview-svg ${isDark ? 'dark-theme' : ''}`}
+      style={{
+        backgroundColor: isDark ? theme.variables.background : undefined,
+      }}
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   );
@@ -78,11 +86,18 @@ function PreviewContent(): JSX.Element {
  * Mermaid diagram preview panel
  */
 export function MermaidPreview(): JSX.Element {
+  const theme = useAtomValue(currentThemeAtom);
+  
   return (
     <div className="mermaid-preview">
       <div className="preview-header">
         <h3>{UI_TEXT.PREVIEW_TITLE}</h3>
-        <StatusIndicator />
+        <div className="preview-header-right">
+          <span className="theme-badge" style={{ background: theme.preview }}>
+            {theme.name}
+          </span>
+          <StatusIndicator />
+        </div>
       </div>
       <div className="preview-container">
         <PreviewContent />
@@ -90,4 +105,3 @@ export function MermaidPreview(): JSX.Element {
     </div>
   );
 }
-
